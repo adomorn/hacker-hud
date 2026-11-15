@@ -55,7 +55,9 @@ At the prompt of a Claude Code terminal session, run these one at a time:
 /plugin install hacker-hud@hacker-hud
 ```
 
-From a shell:
+The second command opens the plugin's details; pick the user scope there.
+
+From a shell (also the way to install it for the desktop app):
 
 ```bash
 claude plugin marketplace add adomorn/hacker-hud
@@ -65,9 +67,7 @@ claude plugin marketplace add adomorn/hacker-hud
 claude plugin install hacker-hud@hacker-hud
 ```
 
-Start a new session afterwards; the mod loads when a session starts.
-
-In the desktop app: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `adomorn/hacker-hud`, then **Add plugin**.
+A shell install loads in the next session you start, or run `/reload-plugins` in a session that is already open. Check it with `claude plugin list`.
 
 The mod loads in every new session. To turn it off:
 
@@ -77,6 +77,7 @@ claude plugin disable hacker-hud@hacker-hud
 
 ## Requirements and known issues
 
+- Claude Code 2.1.287 or later in the terminal, or 2.1.286 or later in the desktop app, for mods to load at all; older versions install the plugin but never run it. Check with `claude --version`.
 - Claude Code 2.1.324 or later for the desktop colors. The terminal keeps its own colors and draws no backdrop; the status line and guards work there too.
 - Announcements play with `afplay` on macOS. Linux and Windows terminals have no player, so they stay silent.
 - On some desktop app versions on macOS, theme backdrops are drawn as a still picture and do not animate ([anthropics/claude-code#109766](https://github.com/anthropics/claude-code/issues/109766)). The code rain starts moving once the app plays scene animations.
