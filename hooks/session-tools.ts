@@ -4,10 +4,11 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, On } from 'claude-code'
 
-// Spoken announcements, generated once and shipped with the mod.
-const SOUND_DONE = 'sounds/done-voice.mp3' // "Task complete."
-const SOUND_APPROVE = 'sounds/approve-voice.mp3' // "Your approval is needed."
-const SOUND_QUESTION = 'sounds/question-voice.mp3' // "I have a question for you."
+// Spoken announcements shipped with the mod. A file of the same name in `sounds-local/`
+// (ignored by git) plays instead, so you can record your own or use another language.
+const SOUND_DONE = 'done-voice.mp3' // "Task complete."
+const SOUND_APPROVE = 'approve-voice.mp3' // "Your approval is needed."
+const SOUND_QUESTION = 'question-voice.mp3' // "I have a question for you."
 const REFRESH_MS = 20_000
 const DONE_SOUND_AFTER_MS = 30_000
 
@@ -175,13 +176,17 @@ function concern(tool: string, input: unknown): string | undefined {
 
 // Announcements never overlap: a second one within 2 seconds of the last is skipped.
 let lastAnnouncedAt = 0
-function announce($: EngineInterface, asset: string): void {
+function announce($: EngineInterface, file: string): void {
   const now = Date.now()
   if (now - lastAnnouncedAt < 2000) {
     return
   }
   lastAnnouncedAt = now
-  void $.audio.play({ asset }, { gain: 0.9 }).catch(() => undefined)
+  // Your own recording first; when there is none, the one shipped with the mod.
+  void $.audio
+    .play({ asset: `sounds-local/${file}` }, { gain: 0.9 })
+    .catch(() => $.audio.play({ asset: `sounds/${file}` }, { gain: 0.9 }))
+    .catch(() => undefined)
 }
 
 /** Tool calls where Claude asks you a question or puts choices in front of you. */

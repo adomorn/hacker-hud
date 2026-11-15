@@ -81,7 +81,7 @@ claude plugin disable hacker-hud@hacker-hud
 | The code rain: glyphs, speed, density | `tools/make_matrix_scene.py`, then run `python3 tools/make_matrix_scene.py` to rebuild `hooks/scene.js` |
 | Status line parts and thresholds | `hooks/session-tools.ts` (`refresh`) |
 | Guard patterns | `hooks/session-tools.ts` (`DANGEROUS`, `SECRETS`) |
-| Announcements | the MP3 files in `sounds/` |
+| Announcements | drop your own `done-voice.mp3`, `approve-voice.mp3` or `question-voice.mp3` into a `sounds-local/` folder next to `sounds/`; any file there plays instead of the shipped one, and git ignores the folder |
 
 Run the tests with:
 

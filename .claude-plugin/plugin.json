@@ -1,10 +1,18 @@
 {
   "name": "hacker-hud",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Green-on-black hacker theme with katakana code rain, plus a session status line, guards for destructive commands and leaked secrets, and spoken announcements.",
-  "author": { "name": "adomorn" },
+  "author": {
+    "name": "adomorn"
+  },
   "repository": "https://github.com/adomorn/hacker-hud",
   "license": "MIT",
-  "keywords": ["theme", "mod", "status-line", "guard", "announcements"],
+  "keywords": [
+    "theme",
+    "mod",
+    "status-line",
+    "guard",
+    "announcements"
+  ],
   "types": "./types/index.d.ts"
 }

@@ -88,3 +88,23 @@ test('a question with choices is announced once', async ($, on) => {
   await $.tool.call({ tool: 'mcp__ccd_turn__wrap_up', recap: 'done' })
   expect(plays).toBe(1)
 })
+
+test('a recording in sounds-local wins, the shipped one plays when there is none', async ($, on) => {
+  const played: string[] = []
+  on('tool.call', () => ({ result: {} }))
+  on('audio.play', (_, e) => {
+    const clip = e.clip as { asset?: string }
+    const asset = clip.asset ?? ''
+    played.push(asset)
+    if (asset.startsWith('sounds-local/')) {
+      throw new Error('no such file')
+    }
+
+    return { value: undefined }
+  })
+  await $.tool.call({ tool: 'AskUserQuestion', questions: [] })
+  for (let i = 0; i < 20; i++) {
+    await Promise.resolve()
+  }
+  expect(played).toEqual(['sounds-local/question-voice.mp3', 'sounds/question-voice.mp3'])
+})
