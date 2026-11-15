@@ -45,19 +45,27 @@ Nothing plays for the tool calls auto mode approves on its own, and two announce
 
 ## Install
 
-At the prompt of a Claude Code terminal session:
+At the prompt of a Claude Code terminal session, run these one at a time:
 
 ```
-/plugin install hacker-hud --marketplace adomorn/hacker-hud
+/plugin marketplace add adomorn/hacker-hud
 ```
 
-Answer `y` to add the marketplace, then pick the user scope.
+```
+/plugin install hacker-hud@hacker-hud
+```
 
 From a shell:
 
 ```bash
-claude plugin install hacker-hud --marketplace adomorn/hacker-hud
+claude plugin marketplace add adomorn/hacker-hud
 ```
+
+```bash
+claude plugin install hacker-hud@hacker-hud
+```
+
+Start a new session afterwards; the mod loads when a session starts.
 
 In the desktop app: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `adomorn/hacker-hud`, then **Add plugin**.
 
