@@ -70,6 +70,27 @@ claude plugin install hacker-hud@hacker-hud
 
 A shell install loads in the next session you start, or run `/reload-plugins` in a session that is already open. Check it with `claude plugin list`.
 
+## Updates
+
+Claude Code doesn't update plugins from GitHub marketplaces on its own until you turn it on, once:
+
+1. Run `/plugin` and open the **Marketplaces** tab.
+2. Select `hacker-hud`, then **Enable auto-update**.
+
+From then on, Claude Code checks for a new version in the background a few minutes after your first message in a session. The new version loads in your next session, or after `/reload-plugins`.
+
+To update by hand instead:
+
+```bash
+claude plugin marketplace update hacker-hud
+```
+
+```bash
+claude plugin update hacker-hud@hacker-hud
+```
+
+## Turning it off
+
 The mod loads in every new session. To turn it off:
 
 ```bash
