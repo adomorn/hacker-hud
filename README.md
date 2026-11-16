@@ -38,9 +38,9 @@ Claude asks for your approval, even in auto mode, before it:
 
 | You hear | When |
 |---|---|
-| "I have a question for you." | Claude asks you a question, presents a plan for approval, or ends its turn with a question |
-| "Your approval is needed." | a guard above asks for your approval |
-| "Task complete." | a turn you started, and that ran longer than 30 seconds, ends |
+| "Connection open. I have a question for you." | Claude asks you a question, presents a plan for approval, or ends its turn with a question |
+| "Warning. Your approval is required." | a guard above asks for your approval |
+| "Task complete. System clean." | a turn you started, and that ran longer than 30 seconds, ends |
 
 Nothing plays for the tool calls auto mode approves on its own, and two announcements never overlap.
 
@@ -123,7 +123,7 @@ claude plugin test .
 ## Credits
 
 - `hooks/make-colors.js` and `hooks/make-colors.d.ts` are copied unchanged from Claude Code's `plugin-authoring` skill, which provides them for mods to build a theme's colors.
-- The announcements were generated with ElevenLabs.
+- The announcements were generated with ElevenLabs, in the "Vector" voice from its voice library.
 
 ## License
 

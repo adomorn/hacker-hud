@@ -6,9 +6,9 @@ import type { EngineInterface, On } from 'claude-code'
 
 // Spoken announcements shipped with the mod. A file of the same name in `sounds-local/`
 // (ignored by git) plays instead, so you can record your own or use another language.
-const SOUND_DONE = 'done-voice.mp3' // "Task complete."
-const SOUND_APPROVE = 'approve-voice.mp3' // "Your approval is needed."
-const SOUND_QUESTION = 'question-voice.mp3' // "I have a question for you."
+const SOUND_DONE = 'done-voice.mp3' // "Task complete. System clean."
+const SOUND_APPROVE = 'approve-voice.mp3' // "Warning. Your approval is required."
+const SOUND_QUESTION = 'question-voice.mp3' // "Connection open. I have a question for you."
 const REFRESH_MS = 20_000
 const DONE_SOUND_AFTER_MS = 30_000
 
