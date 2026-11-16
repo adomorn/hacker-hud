@@ -57,6 +57,13 @@ async function refresh($: EngineInterface): Promise<void> {
   try {
     const parts: string[] = []
 
+    // The folder's name always shows, so the line is never empty.
+    const cwd = await $.session.cwd()
+    const folder = cwd.replace(/\/+$/, '').split('/').pop() ?? ''
+    if (folder !== '') {
+      parts.push(`▸ ${folder}`)
+    }
+
     if (lastTurn !== undefined) {
       parts.push(`⏱ ${duration(lastTurn.ms)} · ${lastTurn.tools} tools`)
     }

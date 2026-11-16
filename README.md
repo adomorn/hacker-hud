@@ -13,11 +13,12 @@ A [Claude Code](https://code.claude.com) mod that turns the desktop app's Code t
 One quiet line that only shows what is worth showing:
 
 ```
-⏱ 1m 12s · 14 tools  ·  $0.42  ·  context 72% ⚠  ·  ⎇ feature/x ↑2 ↓5 · ✎ 3
+▸ my-app  ·  ⏱ 1m 12s · 14 tools  ·  $0.42  ·  context 72% ⚠  ·  ⎇ feature/x ↑2 ↓5 · ✎ 3
 ```
 
 | Part | Shown when |
 |---|---|
+| The session's folder | always, so the line never disappears |
 | Last turn's duration and tool calls | after the first turn |
 | Session cost | it is above $0 |
 | Context usage, with ⚠ at 70% and ‼ at 85% | it reaches 60% |
