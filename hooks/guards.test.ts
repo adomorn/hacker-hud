@@ -1,4 +1,5 @@
 import { expect, test } from 'claude-code/testing'
+import type { On, PromptOrigin } from 'claude-code'
 import type { Engine } from 'claude-code/testing'
 
 // The test runtime has timers; the engine's typings, written for mods, leave them out.
@@ -113,51 +114,119 @@ test('a recording in sounds-local wins, the shipped one plays when there is none
   expect(played).toEqual(['sounds-local/question-voice.mp3', 'sounds/question-voice.mp3'])
 })
 
-/** Plays a turn you started by typing: it begins, makes the given tool calls, and ends after `durationMs`. */
-async function playTurn(
-  $: Engine,
-  calls: Record<string, unknown>[],
-  durationMs: number,
-): Promise<void> {
-  await $.prompt.submit({ text: 'go', wait: false, origin: { kind: 'composer' } })
+type TurnPlan = {
+  origin?: 'composer' | 'task-notification'
+  command?: boolean
+  reason?: 'answer' | 'error'
+  calls?: Record<string, unknown>[]
+}
+
+/** Stands in for the session beneath the mod; returns the list the sounds it plays are added to. */
+function session(on: On): string[] {
+  const played: string[] = []
+  on('prompt.submit', (_, e) => ({ text: e.text }))
+  on('turn.start', (_, e) => ({ turnId: e.turnId }))
+  on('turn.complete', (_, e) => ({ text: e.answer }))
+  on('tool.call', () => ({ result: {} }))
+  on('audio.play', (_, e) => {
+    played.push((e.clip as { asset?: string }).asset ?? '')
+
+    return { value: undefined }
+  })
+
+  return played
+}
+
+/** Plays one turn as a session would and returns the sounds it played. */
+async function soundsOf($: Engine, played: string[], turn: TurnPlan): Promise<string[]> {
+  played.length = 0
+  await $.prompt.submit({
+    text: 'go',
+    wait: false,
+    origin: { kind: turn.origin ?? 'composer' } as PromptOrigin,
+    ...(turn.command === true ? { command: { name: 'help', args: '' } } : {}),
+  })
   await $.turn.start({ text: 'go', turnId: 'turn-1' })
-  for (const call of calls) {
+  for (const call of turn.calls ?? []) {
     await $.tool.call(call as never)
   }
-  // Past the 2-second gap between announcements, so only the rule under test can hold one back.
-  await new Promise<void>(resolve => setTimeout(resolve, 2100))
-  await $.turn.complete({ answer: 'done', durationMs, isAborted: false, turnId: 'turn-1', reason: 'answer' })
+  if ((turn.calls ?? []).length > 0) {
+    // Past the quiet window between announcements, so only the rule under test can hold one back.
+    await new Promise<void>(resolve => setTimeout(resolve, 3600))
+  }
+  const reason = turn.reason ?? 'answer'
+  await $.turn.complete({ answer: 'done', durationMs: 45_000, isAborted: false, turnId: 'turn-1', reason })
   for (let i = 0; i < 20; i++) {
     await Promise.resolve()
   }
+
+  return played
 }
 
-test('a long turn you started announces "Task complete"', async ($, on) => {
-  const played: string[] = []
-  on('prompt.submit', (_, e) => ({ text: e.text }))
-  on('turn.start', (_, e) => ({ turnId: e.turnId }))
-  on('turn.complete', (_, e) => ({ text: e.answer }))
-  on('tool.call', () => ({ result: {} }))
-  on('audio.play', (_, e) => {
-    played.push((e.clip as { asset?: string }).asset ?? '')
+const DONE = 'sounds-local/done-voice.mp3'
+const QUESTION = 'sounds-local/question-voice.mp3'
 
-    return { value: undefined }
-  })
-  await playTurn($, [], 45_000)
-  expect(played).toEqual(['sounds-local/done-voice.mp3'])
+test('a long turn you started announces "Task complete"', async ($, on) => {
+  const played = session(on)
+  expect(await soundsOf($, played, {})).toEqual([DONE])
 })
 
 test('a long turn that ends on a question announces only the question', async ($, on) => {
-  const played: string[] = []
-  on('prompt.submit', (_, e) => ({ text: e.text }))
-  on('turn.start', (_, e) => ({ turnId: e.turnId }))
-  on('turn.complete', (_, e) => ({ text: e.answer }))
-  on('tool.call', () => ({ result: {} }))
-  on('audio.play', (_, e) => {
-    played.push((e.clip as { asset?: string }).asset ?? '')
+  const played = session(on)
+  expect(await soundsOf($, played, { calls: [{ tool: 'mcp__ccd_turn__wrap_up', recap: 'done', ask: 'Push it?' }] })).toEqual([QUESTION])
+})
+
+test('the built-in end-of-turn box counts as a question too', async ($, on) => {
+  const played = session(on)
+  expect(await soundsOf($, played, { calls: [{ tool: 'WrapUp', recap: 'done', ask: 'Push it?' }] })).toEqual([QUESTION])
+})
+
+test('turns you did not start, failed turns and slash commands stay silent', async ($, on) => {
+  const played = session(on)
+  expect(await soundsOf($, played, { origin: 'task-notification' })).toEqual([])
+  expect(await soundsOf($, played, { reason: 'error' })).toEqual([])
+  expect(await soundsOf($, played, { command: true })).toEqual([])
+})
+
+test('in auto mode a dangerous command is put to a person, not left to the classifier', async ($, on) => {
+  on('tool.check', () => ({ decision: 'ask' }))
+  on('audio.play', () => ({ value: undefined }))
+  const verdict = await $.tool.check({ tool: 'Bash', input: { command: 'rm -rf build' } })
+  expect(verdict.decision).toBe('ask')
+  expect(verdict.plugin).toBe('hacker-hud')
+})
+
+test('no approval sound plays where nobody can approve', async ($, on) => {
+  let plays = 0
+  on('tool.check', () => ({ decision: 'allow' }))
+  on('audio.play', () => {
+    plays += 1
 
     return { value: undefined }
   })
-  await playTurn($, [{ tool: 'mcp__ccd_turn__wrap_up', recap: 'done', ask: 'Push it?' }], 45_000)
-  expect(played).toEqual(['sounds-local/question-voice.mp3'])
+  await $.tool.check({ tool: 'Bash', input: { command: 'rm -rf build' } })
+  expect(plays).toBe(0)
+})
+
+test('the status line still shows the folder when every other part fails', async ($, on) => {
+  const lines: (string | undefined)[] = []
+  const fail = (): never => {
+    throw new Error('unavailable')
+  }
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('theme.set', fail)
+  on('session.cwd', () => ({ value: '/work/my-app' }))
+  on('session.usage', fail)
+  on('agent.list', fail)
+  on('process.run', fail)
+  on('clock.every', () => ({ value: undefined }))
+  on('ui.toast', () => ({ value: undefined }))
+  on('ui.status', (_, e) => {
+    lines.push(e.text)
+
+    return { value: undefined }
+  })
+  await $.session.start({ cwd: '/work/my-app', surface: 'desktop', isInteractive: true })
+  await new Promise<void>(resolve => setTimeout(resolve, 100))
+  expect(lines.at(-1)).toBe('▸ my-app')
 })

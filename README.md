@@ -28,11 +28,15 @@ One quiet line that only shows what is worth showing:
 
 **Guards**
 
-Claude asks for your approval, even in auto mode, before it:
-- runs `git push --force`, `git reset --hard`, `git clean -f`, `rm -rf`, `DROP TABLE` / `TRUNCATE TABLE`, a `DELETE FROM` without `WHERE`, or `dotnet ef database drop`;
-- writes something that looks like a private key or an AWS, GitHub, Anthropic, OpenAI, Slack, Google or live Stripe key into a file.
+Claude asks for your approval before it:
+- deletes a folder recursively: `rm -r`/`rm -rf` in any spelling, `find -delete`, PowerShell's `Remove-Item -Recurse`, `rd /s`;
+- rewrites or deletes git history or work: `git push --force`, `--mirror`, `--delete` or a `+`/`:` refspec, `git reset --hard`, `git clean -f`, `git checkout .`/`git restore .`, `git stash clear`/`drop`, `git branch -D`, also with `git -C <dir>`;
+- drops or empties a database: `DROP TABLE`/`DATABASE`/`SCHEMA`, `TRUNCATE`, a `DELETE FROM` without `WHERE` run through a database client (`psql`, `mysql`, `sqlcmd`, `sqlite3` and others), `dropdb`, `dotnet ef database drop`, `dotnet ef database update 0`;
+- writes, edits, sends or runs text that looks like a secret: a private key, AWS, GitHub, GitLab, Anthropic, OpenAI, Slack, Google, Stripe, npm, PyPI, Hugging Face, SendGrid or Azure keys, or a password in a connection string or URL.
 
-`git push --force-with-lease` and a `DELETE` with a `WHERE` pass untouched. A command your permission rules already deny stays denied.
+Commands are read word by word, the way the shell splits them, so a search or a commit message that only mentions `rm -rf` passes, as do `git push --force-with-lease`, `git clean -n`, a `DELETE` with a `WHERE` and the placeholder keys documentation uses (values with `EXAMPLE` or `xxxx` in them).
+
+This holds in auto mode too: a guarded call goes to you, never to the auto-mode classifier. Where nobody can be asked, as in a `claude -p` run or a background subagent, a guarded call is refused. A command your permission rules deny stays denied. The guards are a safety net, not a sandbox: a command assembled at run time (`$cmd -rf`) is not seen.
 
 **Spoken announcements**
 
@@ -40,9 +44,9 @@ Claude asks for your approval, even in auto mode, before it:
 |---|---|
 | "Connection open. I have a question for you." | Claude asks you a question with choices, presents a plan for approval, or, in the desktop app, ends its turn with a question and buttons |
 | "Warning. Your approval is required." | a guard above asks for your approval |
-| "Task complete. System clean." | a turn you started, and that ran longer than 30 seconds, ends; not when the turn ended on a question, or for subagents |
+| "Task complete. System clean." | a turn you started ran longer than 30 seconds and ended with an answer; not for subagents, notifications, failed or stopped turns, or a turn that ended on a question |
 
-Nothing plays for the tool calls auto mode approves on its own, or for Claude Code's own permission prompts, and two announcements never overlap. In the terminal, a turn that ends with a question in plain text plays no question announcement.
+Nothing plays for the tool calls auto mode approves on its own, or for Claude Code's own permission prompts. Announcements never overlap: one that comes while another is playing is skipped. In the terminal, a turn that ends with a question in plain text plays no question announcement.
 
 ## Install
 
@@ -97,6 +101,14 @@ The mod loads in every new session. To turn it off:
 claude plugin disable hacker-hud@hacker-hud
 ```
 
+## What it does on your machine
+
+- It reads each shell command Claude is about to run, and the new text of each file write, edit or message, to check them against the guards above. The check runs inside Claude Code; nothing is stored or sent anywhere.
+- It runs `git --no-optional-locks status` in the session's folder at session start, every 20 seconds and after each turn, for the status line. That command only reads, and it never takes git's index lock.
+- It plays the sound files shipped in `sounds/`, or yours in `sounds-local/`.
+- It sets the Code tab's theme at the start of each session, replacing any other theme.
+- It makes no network requests.
+
 ## Requirements and known issues
 
 - Claude Code 2.1.287 or later in the terminal, or 2.1.286 or later in the desktop app, for mods to load at all; older versions install the plugin but never run it. Check with `claude --version`.
@@ -111,7 +123,7 @@ claude plugin disable hacker-hud@hacker-hud
 | Colors | `hooks/register.tsx` (`makeColors`) |
 | The code rain: glyphs, speed, density | `tools/make_matrix_scene.py`, then run `python3 tools/make_matrix_scene.py` to rebuild `hooks/scene.js` |
 | Status line parts and thresholds | `hooks/session-tools.ts` (`refresh`) |
-| Guard patterns | `hooks/session-tools.ts` (`DANGEROUS`, `SECRETS`) |
+| Guard rules | `hooks/guards.ts` |
 | Announcements | drop your own `done-voice.mp3`, `approve-voice.mp3` or `question-voice.mp3` into a `sounds-local/` folder next to `sounds/`; any file there plays instead of the shipped one, and git ignores the folder |
 
 Run the tests with:

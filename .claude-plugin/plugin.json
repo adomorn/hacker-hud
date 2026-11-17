@@ -1,6 +1,6 @@
 {
   "name": "hacker-hud",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Green-on-black hacker theme with katakana code rain, plus a session status line, guards for destructive commands and leaked secrets, and spoken announcements.",
   "author": {
     "name": "adomorn"

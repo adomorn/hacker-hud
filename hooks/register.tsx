@@ -41,10 +41,15 @@ export const register: Register = on => {
       $.ui.toast(unpainted)
     }
     // The terminal never draws a theme, so the result is not reported: no nagging at every start.
-    await $.theme.set(LOOK)
+    // A theme that can't be set (another mod holds the look) leaves the rest of the mod running.
+    try {
+      await $.theme.set(LOOK)
+    } catch {
+      // Keep the current look.
+    }
 
     const started = await next(e)
-    await startSessionTools($)
+    startSessionTools($)
 
     return started
   })
