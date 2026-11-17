@@ -139,4 +139,4 @@ claude plugin test .
 
 ## License
 
-MIT, see [LICENSE](LICENSE). This covers the mod's own code; `hooks/make-colors.js` and `hooks/make-colors.d.ts` keep the terms they ship with in Claude Code.
+MIT, see [LICENSE](LICENSE). This covers the mod's own code and the voice clips in `sounds/`; `hooks/make-colors.js` and `hooks/make-colors.d.ts` keep the terms they ship with in Claude Code.
