@@ -1,7 +1,6 @@
 // Tools that run in every session: a status line under the prompt, a guard for
 // destructive commands, a secret-leak check, and spoken announcements.
 // Rule of thumb: a piece shows only when it has something worth showing.
-import { atom, read, update } from 'claude-code'
 import type { EngineInterface, On } from 'claude-code'
 
 // Spoken announcements shipped with the mod. A file of the same name in `sounds-local/`
@@ -13,9 +12,6 @@ const REFRESH_MS = 20_000
 const DONE_SOUND_AFTER_MS = 30_000
 
 // ---- status line -----------------------------------------------------------
-
-// Drawn into the hint line under the prompt; writing the atom redraws that line.
-export const statusLine = atom({ plugin: 'hacker-hud', key: 'line' } as const, '')
 
 let turnTools = 0
 let userTurn = false
@@ -108,8 +104,9 @@ async function refresh($: EngineInterface): Promise<void> {
       // No git, or not a repository: the git part stays hidden.
     }
 
+    // Pinned under the prompt; the terminal, desktop and mobile apps all draw it.
     const line = parts.join('  ·  ')
-    await update($, statusLine, () => line)
+    $.ui.status(line === '' ? undefined : line)
   } finally {
     refreshing = false
   }
@@ -220,20 +217,6 @@ export async function startSessionTools($: EngineInterface): Promise<void> {
 }
 
 export function registerSessionTools(on: On): void {
-  // The hint line under the prompt: the terminal draws `tail`; on desktop the hint text itself is extended.
-  on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
-    const line = await read($, statusLine)
-    if (line === '') {
-      return next(e)
-    }
-    if (e.surface === 'terminal') {
-      return next({ ...e, props: { ...e.props, tail: `  ${line}` } })
-    }
-    const hint = e.props.hint === '' ? line : `${e.props.hint}   ·   ${line}`
-
-    return next({ ...e, props: { ...e.props, hint } })
-  })
-
   on('turn.start', ($, e, next) => {
     if (e.agentId === undefined) {
       turnTools = 0
