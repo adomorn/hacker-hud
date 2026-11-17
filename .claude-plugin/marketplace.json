@@ -1,5 +1,6 @@
 {
   "name": "hacker-hud",
   "owner": { "name": "adomorn" },
+  "metadata": { "description": "The hacker-hud mod for Claude Code: a green-on-black theme with code rain, a status line, guards and spoken announcements." },
   "plugins": [{ "name": "hacker-hud", "source": "./" }]
 }

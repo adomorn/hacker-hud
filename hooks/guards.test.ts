@@ -1,4 +1,8 @@
 import { expect, test } from 'claude-code/testing'
+import type { Engine } from 'claude-code/testing'
+
+// The test runtime has timers; the engine's typings, written for mods, leave them out.
+declare const setTimeout: (callback: () => void, ms: number) => unknown
 
 // The engine below the mod allows everything, so every "ask" comes from the guards.
 
@@ -111,17 +115,17 @@ test('a recording in sounds-local wins, the shipped one plays when there is none
 
 /** Plays a turn you started by typing: it begins, makes the given tool calls, and ends after `durationMs`. */
 async function playTurn(
-  $: Parameters<Parameters<typeof test>[1]>[0],
+  $: Engine,
   calls: Record<string, unknown>[],
   durationMs: number,
 ): Promise<void> {
-  await $.prompt.submit({ text: 'go' })
+  await $.prompt.submit({ text: 'go', wait: false, origin: { kind: 'composer' } })
   await $.turn.start({ text: 'go', turnId: 'turn-1' })
   for (const call of calls) {
     await $.tool.call(call as never)
   }
   // Past the 2-second gap between announcements, so only the rule under test can hold one back.
-  await new Promise(resolve => setTimeout(resolve, 2100))
+  await new Promise<void>(resolve => setTimeout(resolve, 2100))
   await $.turn.complete({ answer: 'done', durationMs, isAborted: false, turnId: 'turn-1', reason: 'answer' })
   for (let i = 0; i < 20; i++) {
     await Promise.resolve()
