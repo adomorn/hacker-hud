@@ -15,6 +15,8 @@ const DONE_SOUND_AFTER_MS = 30_000
 
 let turnTools = 0
 let userTurn = false
+// Set when a turn puts a question to you, so its end doesn't also announce "Task complete".
+let askedThisTurn = false
 let lastTurn: { ms: number; tools: number } | undefined
 let refreshing = false
 
@@ -220,6 +222,7 @@ export function registerSessionTools(on: On): void {
   on('turn.start', ($, e, next) => {
     if (e.agentId === undefined) {
       turnTools = 0
+      askedThisTurn = false
     }
 
     return next(e)
@@ -231,6 +234,7 @@ export function registerSessionTools(on: On): void {
       turnTools += 1
     }
     if (asksYou(e.tool, e)) {
+      askedThisTurn = true
       announce($, SOUND_QUESTION)
     }
 
@@ -244,15 +248,17 @@ export function registerSessionTools(on: On): void {
     return next(e)
   }).catch(($, e, next) => next(e))
 
-  // "Task complete" is announced only for long turns you started, so it reaches you after you've looked away.
+  // "Task complete" is announced only for long turns you started, so it reaches you after you've looked away,
+  // and not for a turn that ended on a question: you've just heard that one.
   on('turn.complete', async ($, e, next) => {
     const done = await next(e)
     if (e.agentId === undefined) {
       lastTurn = { ms: e.durationMs, tools: turnTools }
-      if (userTurn && !e.isAborted && e.durationMs >= DONE_SOUND_AFTER_MS) {
+      if (userTurn && !askedThisTurn && !e.isAborted && e.durationMs >= DONE_SOUND_AFTER_MS) {
         announce($, SOUND_DONE)
       }
       userTurn = false
+      askedThisTurn = false
       await refresh($)
     }
 

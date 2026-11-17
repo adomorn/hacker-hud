@@ -108,3 +108,52 @@ test('a recording in sounds-local wins, the shipped one plays when there is none
   }
   expect(played).toEqual(['sounds-local/question-voice.mp3', 'sounds/question-voice.mp3'])
 })
+
+/** Plays a turn you started by typing: it begins, makes the given tool calls, and ends after `durationMs`. */
+async function playTurn(
+  $: Parameters<Parameters<typeof test>[1]>[0],
+  calls: Record<string, unknown>[],
+  durationMs: number,
+): Promise<void> {
+  await $.prompt.submit({ text: 'go' })
+  await $.turn.start({ text: 'go', turnId: 'turn-1' })
+  for (const call of calls) {
+    await $.tool.call(call as never)
+  }
+  // Past the 2-second gap between announcements, so only the rule under test can hold one back.
+  await new Promise(resolve => setTimeout(resolve, 2100))
+  await $.turn.complete({ answer: 'done', durationMs, isAborted: false, turnId: 'turn-1', reason: 'answer' })
+  for (let i = 0; i < 20; i++) {
+    await Promise.resolve()
+  }
+}
+
+test('a long turn you started announces "Task complete"', async ($, on) => {
+  const played: string[] = []
+  on('prompt.submit', (_, e) => ({ text: e.text }))
+  on('turn.start', (_, e) => ({ turnId: e.turnId }))
+  on('turn.complete', (_, e) => ({ text: e.answer }))
+  on('tool.call', () => ({ result: {} }))
+  on('audio.play', (_, e) => {
+    played.push((e.clip as { asset?: string }).asset ?? '')
+
+    return { value: undefined }
+  })
+  await playTurn($, [], 45_000)
+  expect(played).toEqual(['sounds-local/done-voice.mp3'])
+})
+
+test('a long turn that ends on a question announces only the question', async ($, on) => {
+  const played: string[] = []
+  on('prompt.submit', (_, e) => ({ text: e.text }))
+  on('turn.start', (_, e) => ({ turnId: e.turnId }))
+  on('turn.complete', (_, e) => ({ text: e.answer }))
+  on('tool.call', () => ({ result: {} }))
+  on('audio.play', (_, e) => {
+    played.push((e.clip as { asset?: string }).asset ?? '')
+
+    return { value: undefined }
+  })
+  await playTurn($, [{ tool: 'mcp__ccd_turn__wrap_up', recap: 'done', ask: 'Push it?' }], 45_000)
+  expect(played).toEqual(['sounds-local/question-voice.mp3'])
+})

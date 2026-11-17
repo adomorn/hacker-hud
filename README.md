@@ -38,11 +38,11 @@ Claude asks for your approval, even in auto mode, before it:
 
 | You hear | When |
 |---|---|
-| "Connection open. I have a question for you." | Claude asks you a question, presents a plan for approval, or ends its turn with a question |
+| "Connection open. I have a question for you." | Claude asks you a question with choices, presents a plan for approval, or, in the desktop app, ends its turn with a question and buttons |
 | "Warning. Your approval is required." | a guard above asks for your approval |
-| "Task complete. System clean." | a turn you started, and that ran longer than 30 seconds, ends |
+| "Task complete. System clean." | a turn you started, and that ran longer than 30 seconds, ends; not when the turn ended on a question, or for subagents |
 
-Nothing plays for the tool calls auto mode approves on its own, and two announcements never overlap.
+Nothing plays for the tool calls auto mode approves on its own, or for Claude Code's own permission prompts, and two announcements never overlap. In the terminal, a turn that ends with a question in plain text plays no question announcement.
 
 ## Install
 
